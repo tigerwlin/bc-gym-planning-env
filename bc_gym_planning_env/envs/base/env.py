@@ -196,9 +196,10 @@ def make_initial_state(path, costmap, robot, reward_provider, params):
     robot_state = robot.get_initial_state()
     robot_state.set_pose(initial_pose)
 
+    initial_reward_provider_state = reward_provider.generate_initial_state(path, params.reward_provider_params)
     return State(
-        reward_provider_state=reward_provider.generate_initial_state(path, params.reward_provider_params),
-        path=np.ascontiguousarray(path),
+        reward_provider_state=initial_reward_provider_state,
+        path=np.ascontiguousarray(initial_reward_provider_state.current_path()),
         original_path=np.copy(np.ascontiguousarray(path)),
         costmap=costmap,
         iter_timeout=params.iteration_timeout,
@@ -227,7 +228,10 @@ class PlanEnv(Serializable):
         self._reward_provider = reward_provider_example(params=params.reward_provider_params)
 
         # Properties, things without state
-        self.action_space = spaces.Discrete(11)
+        self.action_space = spaces.Box(
+            low=np.array([-self._robot.get_max_front_wheel_speed() / 2, -np.pi/2]),
+            high=np.array([self._robot.get_max_front_wheel_speed(), np.pi/2]),
+            dtype=np.float32)
         self.reward_range = (0.0, 1.0)
         self._gui = OpenCVGui()
         self._params = params
@@ -340,12 +344,13 @@ class PlanEnv(Serializable):
         self._state = self._resolve_state_transition(action, self._state)
 
         reward = self._reward_provider.reward(self._state)
-        obs = self._extract_obs()
-        info = self._extract_info()
-        done = self._extract_done(self._state)
 
         self._state.reward_provider_state = self._reward_provider.get_state()
         self._state.path = self._reward_provider.get_current_path()
+
+        obs = self._extract_obs()
+        info = self._extract_info()
+        done = self._extract_done(self._state)
 
         return obs, reward, done, info
 
