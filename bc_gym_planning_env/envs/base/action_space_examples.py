@@ -11,6 +11,8 @@ class ActionSpaceExamples:
     """ Names of action space"""
     CONTINUOUS_SPACE = 'continuous_space'
     DISCRETE_SPACE = 'discrete_space'
+    DISCRETE_SPACE_5 = 'discrete_space_5'
+    DISCRETE_SPACE_1000 = 'discrete_space_1000'
 
 
 def get_action_space_example(action_space_name):
@@ -33,6 +35,22 @@ def get_action_space_example(action_space_name):
                                8: [0.2, -1.1],
                                9: [0.2, 1.3],
                                10: [0.2, -1.3]}
+        return action_space, action_command_list
+    elif action_space_name == ActionSpaceExamples.DISCRETE_SPACE_5:
+        action_space = spaces.Discrete(5)
+        action_command_list = {0: [0.2, 0.0],
+                               1: [0.2, 0.7],
+                               2: [0.2, -0.7],
+                               3: [0.2, 1.4],
+                               4: [0.2, -1.4]}
+        return action_space, action_command_list
+    elif action_space_name == ActionSpaceExamples.DISCRETE_SPACE_1000:
+        action_space = spaces.Discrete(1000)
+        angle_commands = np.linspace(-1.5, 1.5, num=1000)
+        vel_commands = np.ones((1000, )) * 0.2
+        numpy_commands = np.concatenate((vel_commands, angle_commands), axis=1)
+        numpy_commands = np.transpose(numpy_commands)
+        action_command_list = dict(enumerate(numpy_commands))
         return action_space, action_command_list
     elif action_space_name == ActionSpaceExamples.CONTINUOUS_SPACE:
         action_space = spaces.Box(
