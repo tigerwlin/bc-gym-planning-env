@@ -4,6 +4,7 @@ import torch
 import torch.optim as optim
 import numpy as np
 import pickle
+import argparse
 
 from vel.rl.metrics import EpisodeRewardMetric
 from vel.storage.streaming.stdout import StdoutStreaming
@@ -24,12 +25,13 @@ from bc_gym_planning_env.envs.synth_turn_env import ColoredEgoCostmapRandomAisle
 from bc_gym_planning_env.envs.base.action import Action
 
 
-def train_model():
+def train_model(args):
     """a sample training script, that creates a PPO instance and train it with bc-gym environment
     :return: None
     """
     device = torch.device('cpu')
     seed = 1001
+    trial_name = args.trial_name
 
     # Set random seed in python std lib, numpy and pytorch
     set_seed(seed)
@@ -112,8 +114,8 @@ def train_model():
         eval_results.append(eval_result)
 
         if i % 100 == 0:
-            torch.save(model.state_dict(), 'tmp_checkout.data')
-            with open('tmp_eval_results.pkl', 'wb') as f:
+            torch.save(model.state_dict(), '{}.data'.format(trial_name))
+            with open('{}.pkl'.format(trial_name), 'wb') as f:
                 pickle.dump(eval_results, f, 0)
 
     training_info.on_train_end()
@@ -262,5 +264,9 @@ class VideoRecorder(object):
 
 
 if __name__ == '__main__':
-    train_model()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("trial_name")
+    args = parser.parse_args()
+
+    train_model(args)
     eval_model()
