@@ -48,7 +48,7 @@ def get_action_space_example(action_space_name):
         action_space = spaces.Discrete(1000)
         angle_commands = np.linspace(-1.5, 1.5, num=1000)
         vel_commands = np.ones((1000, )) * 0.2
-        numpy_commands = np.concatenate((vel_commands, angle_commands), axis=1)
+        numpy_commands = np.stack((vel_commands, angle_commands))
         numpy_commands = np.transpose(numpy_commands)
         action_command_list = dict(enumerate(numpy_commands))
         return action_space, action_command_list
