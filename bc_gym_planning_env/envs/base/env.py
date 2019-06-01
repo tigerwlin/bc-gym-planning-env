@@ -63,6 +63,7 @@ class State(object):
     control_queue = attr.ib(type=list)
     pose = attr.ib(type=np.ndarray)
     robot_state = attr.ib(type=object)
+    episode_return = attr.ib(type=float)
 
     def copy(self):
         """ Get the copy of the environment.
@@ -115,6 +116,7 @@ def make_initial_state(path, costmap, robot, params):
         robot_state=robot_state,
         robot_state_queue=[robot_state],
         control_queue=[],
+        episode_return=0.0
     )
 
 
@@ -227,11 +229,12 @@ class PlanEnv(object):
 
         obs = self._extract_obs()
         reward = self._reward_provider.reward(self._state)
-        info = self._extract_info()
         done = self._extract_done()
+        info = self._extract_info(done)
 
         self._state.reward_provider_state = self._reward_provider.get_state()
         self._state.path = self._reward_provider.get_current_path()
+        self._state.episode_return += reward
 
         return obs, reward, done, info
 
@@ -306,10 +309,11 @@ class PlanEnv(object):
             dt=self._params.dt
         )
 
-    @staticmethod
-    def _extract_info():
+    def _extract_info(self, done):
         """ Extract debug information from the env. For now empty.
         :return Dict: empty dict (for now) """
+        if done:
+            return {'episode': {'r': self._state.episode_return}}
         return {}
 
 
