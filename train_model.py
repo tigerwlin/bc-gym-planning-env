@@ -158,17 +158,21 @@ def evaluate_model(model, env, device, takes=1, debug=False):
 
     rewards = []
     lengths = []
-    frames = []
+    pass_count = 0
 
     for i in range(takes):
+        frames = []
         result = record_take(model, env, device)
         rewards.append(result['r'])
         lengths.append(result['l'])
         frames.append(result['frames'])
+        if result['l'] != 1200 and not result['collide']:
+            pass_count += 1
 
-    if debug:
-        save_as_video(frames)
-    # print(pd.DataFrame({'lengths': lengths, 'rewards': rewards}).describe())
+        if debug:
+            save_as_video(frames)
+
+    print("success rate: {}/{}".format(pass_count, takes))
     model.train(mode=True)
     return {'rewards': rewards, 'lengths': lengths}
 
@@ -205,8 +209,8 @@ def record_take(model, env_instance, device, debug=False):
             frames.append(env_instance.render(mode='human'))
 
         if done:
-            print("episode reward: {}, steps: {}".format(rewards, steps))
-            return {'r': rewards, 'l': steps, 'frames': frames}
+            print("episode reward: {}, steps: {}, collide: {}".format(rewards, steps, epinfo[0]['episode']['collide']))
+            return {'r': rewards, 'l': steps, 'frames': frames, 'collide': epinfo[0]['episode']['collide']}
 
 
 def _dict_to_tensor(numpy_array_dict, device):
@@ -227,19 +231,13 @@ def eval_model():
     # Set random seed in python std lib, numpy and pytorch
     set_seed(seed)
 
-    vec_env = butils.make_vec_env(
-        env_id='EgoCostmapAsImgRandomTurnRoboPlanning-v0',
-        env_type='robo_planning',
-        num_env=1,
-        seed=0,
-        flatten_dict_observations=False
-    )
-    vec_env.reset()
+    env_function = lambda: ColoredEgoCostmapRandomAisleTurnEnv()
+    vec_env = DummyVecEnv([env_function])
 
     model = PolicyGradientModelFactory(
         backbone=NatureCnnTwoTowerFactory(input_width=133, input_height=117, input_channels=1)
     ).instantiate(action_space=vec_env.action_space)
-    model_checkpoint = torch.load('tmp_checkout.data', map_location='cpu')
+    model_checkpoint = torch.load('old_baseline_1.data', map_location='cpu')
     model.load_state_dict(model_checkpoint)
 
     evaluate_model(model, vec_env, device, takes=10)
@@ -257,9 +255,6 @@ def save_as_video(frames):
             frame = cv2.resize(frame, video_shape)
             # write the flipped frame
             out.write(frame)
-
-            cv2.imshow('frame', frame)
-            cv2.waitKey(1)
 
     # Release everything if job is finished
     out.release()

@@ -313,7 +313,8 @@ class PlanEnv(object):
         """ Extract debug information from the env. For now empty.
         :return Dict: empty dict (for now) """
         if done:
-            return {'episode': {'r': self._state.episode_return}}
+            return {'episode': {'r': self._state.episode_return, 'l': self._state.current_iter,
+                                'collide': self._state.robot_collided}}
         return {}
 
 
