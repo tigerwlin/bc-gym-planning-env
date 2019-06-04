@@ -29,7 +29,10 @@ def train_model(args):
     """a sample training script, that creates a PPO instance and train it with bc-gym environment
     :return: None
     """
-    device = torch.device('cpu')
+    if torch.cuda.is_available():
+        device = torch.device('cuda:0')
+    else:
+        device = torch.device('cpu')
     seed = 1001
     trial_name = args.trial_name
 
@@ -211,12 +214,16 @@ def _bc_observations_to_tensor(observations, device):
         raise NotImplementedError
 
 
-def eval_model():
+def eval_model(args):
     """load a checkpoint data and evaluate its performance
     :return: None
     """
-    device = torch.device('cpu')
+    if torch.cuda.is_available():
+        device = torch.device('cuda:0')
+    else:
+        device = torch.device('cpu')
     seed = 1001
+    trial_name = args.trial_name
 
     # Set random seed in python std lib, numpy and pytorch
     set_seed(seed)
@@ -229,10 +236,12 @@ def eval_model():
         input_block=ImageToTensorFactory(),
         backbone=NatureCnnTwoTowerFactory(input_width=133, input_height=133, input_channels=1)
     ).instantiate(action_space=vec_env.action_space)
-    model_checkpoint = torch.load('tmp_checkout.data', map_location='cpu')
+    model_checkpoint = torch.load('{}.data'.format(trial_name), map_location=device)
     model.load_state_dict(model_checkpoint)
+    if torch.cuda.is_available():
+        model.cuda(device)
 
-    evaluate_model(model, vec_env, device, takes=10)
+    evaluate_model(model, vec_env, device, takes=100, debug=True)
 
 
 class VideoRecorder(object):
@@ -269,4 +278,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     train_model(args)
-    eval_model()
+    eval_model(args)
