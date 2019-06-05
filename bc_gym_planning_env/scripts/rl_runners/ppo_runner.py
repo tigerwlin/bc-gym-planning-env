@@ -142,7 +142,7 @@ def evaluate_model(model, env, device, takes=1, debug=False):
 
     for i in range(takes):
         frames = []
-        result = record_take(model, env, device)
+        result = record_take(model, env, device, debug)
         rewards.append(result['r'])
         lengths.append(result['l'])
         frames.append(result['frames'])
@@ -189,7 +189,7 @@ def record_take(model, env_instance, device, debug=False):
         observation, reward, done, epinfo = env_instance.step(action_classes)
         steps += 1
         rewards += reward
-        if debug or device.type == 'cpu':
+        if debug:
             frames.append(env_instance.render(mode='human'))
 
         if done:
