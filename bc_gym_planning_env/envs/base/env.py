@@ -7,6 +7,8 @@ import attr
 import copy
 import numpy as np
 from bc_gym_planning_env.robot_models.tricycle_model import TricycleRobot
+from bc_gym_planning_env.robot_models.differential_drive import DiffDriveRobot
+from bc_gym_planning_env.robot_models.standard_robot_names_examples import StandardRobotExamples
 from bc_gym_planning_env.robot_models.robot_dimensions_examples import get_dimensions_example
 from bc_gym_planning_env.robot_models.robot_examples_factory import create_standard_robot
 from bc_gym_planning_env.utilities.costmap_2d import CostMap2D
@@ -227,7 +229,12 @@ class PlanEnv(Serializable):
         :param params EnvParams: parametrization of the environment
         """
         # Stateful things
-        self._robot = TricycleRobot(dimensions=get_dimensions_example(params.robot_name))
+        if params.robot_name == StandardRobotExamples.INDUSTRIAL_TRICYCLE_V1:
+            self._robot = TricycleRobot(dimensions=get_dimensions_example(params.robot_name))
+        elif params.robot_name == StandardRobotExamples.INDUSTRIAL_DIFFDRIVE_V1:
+            self._robot = DiffDriveRobot(dimensions=get_dimensions_example(params.robot_name))
+        else:
+            raise NotImplementedError
         reward_provider_example = get_reward_provider_example(params.reward_provider_name)
         self._reward_provider = reward_provider_example(params=params.reward_provider_params)
 
