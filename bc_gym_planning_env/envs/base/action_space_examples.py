@@ -13,6 +13,7 @@ class ActionSpaceExamples:
     DISCRETE_SPACE = 'discrete_space'
     DISCRETE_SPACE_5 = 'discrete_space_5'
     DISCRETE_SPACE_1000 = 'discrete_space_1000'
+    DISCRETE_SPACE_DIFFDRIVE = 'discrete_space_diffdrive'
 
 
 def get_action_space_example(action_space_name):
@@ -43,6 +44,14 @@ def get_action_space_example(action_space_name):
                                2: [0.2, -0.7],
                                3: [0.2, 1.4],
                                4: [0.2, -1.4]}
+        return action_space, action_command_list
+    elif action_space_name == ActionSpaceExamples.DISCRETE_SPACE_DIFFDRIVE:
+        action_space = spaces.Discrete(11)
+        angle_commands = np.linspace(-0.1, 0.1, num=11)
+        vel_commands = np.ones((11,)) * 0.2
+        numpy_commands = np.stack((vel_commands, angle_commands))
+        numpy_commands = np.transpose(numpy_commands)
+        action_command_list = dict(enumerate(numpy_commands))
         return action_space, action_command_list
     elif action_space_name == ActionSpaceExamples.DISCRETE_SPACE_1000:
         action_space = spaces.Discrete(1000)
