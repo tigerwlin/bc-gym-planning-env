@@ -12,8 +12,10 @@ class ActionSpaceExamples:
     CONTINUOUS_SPACE = 'continuous_space'
     DISCRETE_SPACE = 'discrete_space'
     DISCRETE_SPACE_5 = 'discrete_space_5'
+    DISCRETE_SPACE_3 = 'discrete_space_3'
     DISCRETE_SPACE_1000 = 'discrete_space_1000'
     DISCRETE_SPACE_DIFFDRIVE = 'discrete_space_diffdrive'
+    DISCRETE_SPACE_DIFFDRIVE_3 = 'discrete_space_diffdrive_3'
 
 
 def get_action_space_example(action_space_name):
@@ -44,6 +46,18 @@ def get_action_space_example(action_space_name):
                                2: [0.2, -0.7],
                                3: [0.2, 1.4],
                                4: [0.2, -1.4]}
+        return action_space, action_command_list
+    elif action_space_name == ActionSpaceExamples.DISCRETE_SPACE_3:
+        action_space = spaces.Discrete(3)
+        action_command_list = {0: [0.2, 0.0],
+                               1: [0.2, 0.3],
+                               2: [0.2, -0.3]}
+        return action_space, action_command_list
+    elif action_space_name == ActionSpaceExamples.DISCRETE_SPACE_DIFFDRIVE_3:
+        action_space = spaces.Discrete(3)
+        action_command_list = {0: [0.2, 0.0],
+                               1: [0.2, 0.1],
+                               2: [0.2, -0.1]}
         return action_space, action_command_list
     elif action_space_name == ActionSpaceExamples.DISCRETE_SPACE_DIFFDRIVE:
         action_space = spaces.Discrete(11)
