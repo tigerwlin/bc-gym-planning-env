@@ -177,7 +177,7 @@ def record_take(model, env_instance, device, debug=False):
     while True:
         observation_tensor = _bc_observations_to_tensor(observation, device)
         if isinstance(model, StochasticPolicyModel):
-            actions = model.step(observation_tensor, argmax_sampling=False)['actions'].cpu().numpy()
+            actions = model.step(observation_tensor, argmax_sampling=True)['actions'].cpu().numpy()
         elif isinstance(model, DeterministicPolicyModel):
             actions = model.step(observation_tensor)['actions'].cpu().numpy()
         else:
