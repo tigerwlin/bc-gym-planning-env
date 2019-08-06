@@ -1,6 +1,7 @@
 """ Drawing utilities """
 from __future__ import absolute_import
 
+import cv2
 from bc_gym_planning_env.utilities.path_tools import inscribed_radius
 from bc_gym_planning_env.utilities.map_drawing_utils import get_drawing_coordinates_from_physical, \
     get_drawing_angle_from_physical, draw_world_map, draw_wide_path, prepare_canvas
@@ -57,12 +58,18 @@ def draw_environment(path_to_follow, original_path, robot, costmap):
             color=(220, 220, 220)
         )
 
-    x, y, angle = robot.get_pose()
-    draw_robot(robot, img, x, y, angle, color=(0, 100, 0), costmap=costmap)
-    draw_world_map(img, costmap.get_data())
-
     for pose in path_to_follow:
         x, y, angle = pose
         draw_robot(robot, img, x, y, angle, color=(100, 0, 0), costmap=costmap, alpha=0.1, draw_steering_details=False)
+
+    x, y, angle = robot.get_pose()
+    action_v = robot._state.action_v
+    action_w = robot._state.action_w
+    draw_robot(robot, img, x, y, angle, color=(0, 100, 0), costmap=costmap)
+    draw_world_map(img, costmap.get_data())
+
+    draw_text = '[v:{:.4f}, w:{:.4f}]'.format(action_v, action_w)
+    font = cv2.FONT_HERSHEY_PLAIN
+    cv2.putText(img, draw_text, (30, 30), font, 1, (0, 0, 255), 1, cv2.LINE_AA)
 
     return img

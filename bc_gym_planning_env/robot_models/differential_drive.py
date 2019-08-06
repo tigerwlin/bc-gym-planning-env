@@ -85,6 +85,8 @@ class DiffdriveRobotState(Serializable):
     angle = attr.ib(default=0.0, type=float)   # heading angle of the robot
     v = attr.ib(default=0.0, type=float)       # linear speed of the robot
     w = attr.ib(default=0.0, type=float)       # angular speed of the robot
+    action_v = attr.ib(default=0.0, type=float)
+    action_w = attr.ib(default=0.0, type=float)
 
     def copy(self):
         """ Return the copy of the state
@@ -263,6 +265,8 @@ class DiffDriveRobot(IRobot, Serializable):
         self._state.set_pose(new_pose)
         self._state.v = v[0]
         self._state.w = w[0]
+        self._state.action_v = action.command[0]
+        self._state.action_w = action.command[1]
 
     def draw(self, image, px, py, angle, color, map_resolution, alpha=1.0, draw_steering_details=True):
         """

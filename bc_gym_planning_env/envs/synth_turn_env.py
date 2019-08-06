@@ -15,6 +15,8 @@ from bc_gym_planning_env.envs.base import spaces
 from bc_gym_planning_env.envs.base.maps import Wall
 from bc_gym_planning_env.utilities.coordinate_transformations import from_global_to_egocentric, world_to_pixel
 from bc_gym_planning_env.utilities.costmap_utils import extract_egocentric_costmap
+from bc_gym_planning_env.utilities.path_tools import blit
+from bc_gym_planning_env.utilities.map_drawing_utils import get_pixel_footprint_for_drawing, get_physical_angle_from_drawing
 
 
 @attr.s
@@ -170,7 +172,7 @@ def path_and_costmap_from_config(params):
     world_size = abs(max_x - min_x) + 2 * margin, abs(max_y - min_y) + 2 * margin
     world_origin = min_x - margin, min_y - margin
 
-    if np.random.rand() < 0.0:
+    if np.random.rand() < 2.0:
         obstacles = [
                 Wall(from_pt=a, to_pt=i),
                 Wall(from_pt=c, to_pt=d),
@@ -187,7 +189,7 @@ def path_and_costmap_from_config(params):
                 Wall(from_pt=g + a - c, to_pt=g),
                 Wall(from_pt=g, to_pt=h)
         ]
-
+    obstacles = []
     static_path = np.array([rb, rk, rl, rf])
 
     static_map = CostMap2D.create_empty(
@@ -247,7 +249,7 @@ class RandomAisleTurnEnv(object):
         else:
             self._rng = rng
 
-        self.seed(seed)
+        self.seed(1001)
         self._draw_new_turn_on_reset = draw_new_turn_on_reset
 
         turn_params = self._draw_random_turn_params()
@@ -330,32 +332,46 @@ class RandomAisleTurnEnv(object):
 
         :return TurnParams: Random turn params
         """
-        if self._rng.rand() < 0.50:
-            turn_corridor_angle = self._rng.uniform(-0. / 8. * np.pi, 3. / 8. * np.pi)
-        else:
-            turn_corridor_angle = self._rng.uniform(-3. / 8. * np.pi, 0. / 8. * np.pi)
-
-        return TurnParams(
-            main_corridor_length=self._rng.uniform(10, 16),
-            turn_corridor_length=self._rng.uniform(4, 12),
-            turn_corridor_angle=turn_corridor_angle,     # self._rng.uniform(-3./8. * np.pi, 3./8.*np.pi),
-            main_corridor_width=self._rng.uniform(1.0, 1.5),
-            turn_corridor_width=self._rng.uniform(1.0, 1.5),
-            flip_arnd_oy=bool(self._rng.rand() < 0.5),
-            flip_arnd_ox=bool(self._rng.rand() < 0.5),
-            rot_theta=self._rng.uniform(0, 2*np.pi)
-        )
-
+        # if self._rng.rand() < 0.00:
+        #     turn_corridor_angle = self._rng.uniform(-0. / 8. * np.pi, 3. / 8. * np.pi)
+        # else:
+        #     turn_corridor_angle = self._rng.uniform(-3. / 8. * np.pi, 0. / 8. * np.pi)
+        #
         # return TurnParams(
-        # main_corridor_length=6,
-        # turn_corridor_length=4,
-        # turn_corridor_angle=2. / 8. * np.pi,
-        # main_corridor_width=1.0,
-        # turn_corridor_width=1.0,
-        # flip_arnd_oy=bool(self._rng.rand() < 0.5),
-        # flip_arnd_ox=False, #bool(self._rng.rand() < 0.5),
-        # rot_theta=0.
+        #     main_corridor_length=self._rng.uniform(10, 16),
+        #     turn_corridor_length=self._rng.uniform(4, 12),
+        #     turn_corridor_angle=turn_corridor_angle,     # self._rng.uniform(-3./8. * np.pi, 3./8.*np.pi),
+        #     main_corridor_width=self._rng.uniform(1.0, 1.5),
+        #     turn_corridor_width=self._rng.uniform(1.0, 1.5),
+        #     flip_arnd_oy=bool(self._rng.rand() < 0.5),
+        #     flip_arnd_ox=bool(self._rng.rand() < 0.5),
+        #     rot_theta=self._rng.uniform(0, 2*np.pi)
         # )
+        if self._rng.rand() < 2.50:
+            return TurnParams(
+                main_corridor_length=10.,
+                turn_corridor_length=0.,
+                turn_corridor_angle=0.,
+                main_corridor_width=0.0,
+                turn_corridor_width=0.0,
+                flip_arnd_oy=False,
+                flip_arnd_ox=False,
+                rot_theta=0.
+            )
+        else:
+            turn_angle_pool = [np.pi / 6., np.pi / 6.]
+            turn_corridor_angle = self._rng.choice(turn_angle_pool)
+
+            return TurnParams(
+                main_corridor_length=5,
+                turn_corridor_length=5,
+                turn_corridor_angle=turn_corridor_angle,
+                main_corridor_width=1.0,
+                turn_corridor_width=1.0,
+                flip_arnd_oy=True, # bool(self._rng.rand() < 0.5),
+                flip_arnd_ox=False,
+                rot_theta=0.
+            )
 
 
 class ColoredCostmapRandomAisleTurnEnv(RandomAisleTurnEnv):
@@ -434,8 +450,19 @@ class ColoredEgoCostmapRandomAisleTurnEnv(RandomAisleTurnEnv):
             resulting_size=(self._egomap_x_bounds[1] - self._egomap_x_bounds[0],
                             self._egomap_y_bounds[1] - self._egomap_y_bounds[0]))
 
+        # px = int((0. - self._egomap_x_bounds[0]) / costmap.get_resolution())
+        # py = int((0. - self._egomap_y_bounds[0]) / costmap.get_resolution())
+        # angle = 0.
+        # color = 100
+        # map_resolution = costmap.get_resolution()
+        # footprint = self._env.get_robot().get_footprint()
+        # image = ego_costmap.get_data()
+        # kernel = get_pixel_footprint_for_drawing(get_physical_angle_from_drawing(angle), footprint, map_resolution)
+        # blit(kernel, image, px, py, color)
+
         ego_path = from_global_to_egocentric(rich_observation.path, robot_pose)
         obs = np.expand_dims(ego_costmap.get_data(), -1)
+        # obs = self._add_coords(obs)
         normalized_goal = ego_path[-1, :2] / ego_costmap.world_size()
         normalized_goal = normalized_goal / np.linalg.norm(normalized_goal)
 
@@ -444,6 +471,40 @@ class ColoredEgoCostmapRandomAisleTurnEnv(RandomAisleTurnEnv):
 
         return OrderedDict((('environment', obs),
                             ('goal', np.expand_dims(goal_n_state, -1))))
+
+    def _add_coords(self, input_tensor):
+        x_dim = input_tensor.shape[0]
+        y_dim = input_tensor.shape[1]
+
+        xx_ones = np.ones([1, y_dim], dtype=np.int32)
+        xx_ones = np.expand_dims(xx_ones, -1)
+
+        xx_range = np.expand_dims(np.arange(x_dim), -1)
+        xx_range = np.expand_dims(xx_range, -1)
+
+        xx_channel = np.matmul(xx_ones, xx_range)
+
+        yy_ones = np.ones([x_dim, 1], dtype=np.int32)
+        yy_ones = np.expand_dims(yy_ones, -1)
+
+        yy_range = np.expand_dims(np.arange(y_dim), 0)
+        yy_range = np.expand_dims(yy_range, -1)
+
+        yy_channel = np.matmul(yy_range, yy_ones)
+
+        xx_channel = xx_channel.astype('float32') / (x_dim - 1)
+        yy_channel = yy_channel.astype('float32') / (y_dim - 1)
+
+        xx_channel = (xx_channel * 1 - 0) * 255.0
+        yy_channel = (yy_channel * 1 - 0) * 255.0
+        # input_tensor = input_tensor - 255.0/2.0
+        # ret = np.concatenate([input_tensor, xx_channel, yy_channel], axis=-1)
+        import pickle
+        with open('random_layer.pkl', 'rb') as f:
+            fake_layers = pickle.load(f) * 255.0
+        ret = np.concatenate([input_tensor, fake_layers], axis=-1)
+        # ret = np.concatenate([input_tensor, input_tensor, input_tensor], axis=-1)
+        return ret
 
     def step(self, action):
         """

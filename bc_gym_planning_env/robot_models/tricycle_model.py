@@ -242,6 +242,8 @@ class TricycleRobotState(Serializable):
     w = attr.ib(default=0.0, type=float)
     steering_motor_command = attr.ib(default=0.0, type=float)
     wheel_angle = attr.ib(default=0.0, type=float)
+    action_v = attr.ib(default=0.0, type=float)
+    action_w = attr.ib(default=0.0, type=float)
 
     VERSION = 1
     robot_type_name = StandardRobotExamples.INDUSTRIAL_TRICYCLE_V1
@@ -536,6 +538,8 @@ class TricycleRobot(IRobot, Serializable):
         self._state.steering_motor_command = steering_motor_command
         self._state.v = v[0]
         self._state.w = w[0]
+        self._state.action_v = action.command[0]
+        self._state.action_w = action.command[1]
 
     def draw(self, image, px, py, angle, color, map_resolution, alpha=1.0, draw_steering_details=True):
         """

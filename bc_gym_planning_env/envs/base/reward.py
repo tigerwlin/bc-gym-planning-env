@@ -61,7 +61,7 @@ class ContinuousRewardProviderState(Serializable):
         :return np.ndarray(N, 3): the piece of static path left to follow
         """
         # pylint: disable=invalid-slice-index,unsubscriptable-object
-        return self.path[self.target_idx:]
+        return self.path[self.target_idx-1:]
 
     def done(self):
         """ Are we done?
